@@ -1,12 +1,13 @@
-"""PDF processing endpoints (Phase 7).
+"""PDF processing endpoints (Phase 7 + Phase 8 OCR integration).
 
 Accepts a PDF upload, writes it to a temporary local file, extracts page-level
-text via app.tools.pdf_tool (PyMuPDF, fully local) and returns structured JSON.
+text and returns structured JSON.
 
-- Scanned/image-only pages are returned with text="" and has_text=false;
-  OCR is intentionally NOT performed here (Phase 8 boundary).
-- Uploaded files are temporary and always cleaned up; nothing is sent
-  outside the machine.
+- Normal text-based pages are extracted with PyMuPDF.
+- Scanned/image-only pages (no meaningful extractable text) are rendered
+  in-memory and transcribed with the local PaddleOCR engine, page by page.
+- OCR runs fully on-premise; uploaded files are temporary and always
+  cleaned up, and nothing is sent outside the machine.
 """
 
 import os
@@ -31,7 +32,11 @@ UPLOAD_CHUNK_SIZE_BYTES = 1024 * 1024  # stream uploads in 1 MB chunks
     summary="Extract Page-Level Text from PDF",
 )
 async def extract_pdf(file: UploadFile = File(...)):
-    """Extract text page-by-page from an uploaded text-based PDF."""
+    """Extract page-level text from an uploaded PDF.
+
+    Text-based pages are handled by PyMuPDF; scanned/image-only pages are
+    processed automatically with the local PaddleOCR engine.
+    """
     filename = file.filename or ""
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     if ext != "pdf":
@@ -60,7 +65,9 @@ async def extract_pdf(file: UploadFile = File(...)):
                 buffer.write(chunk)
 
         try:
-            result = extract_pdf_text(tmp_path)
+            # Phase 8: scanned/image-only pages automatically fall back to the
+            # local PaddleOCR engine; text pages still use PyMuPDF only.
+            result = extract_pdf_text(tmp_path, use_ocr=True)
         except PDFExtractionError as exc:
             logger.warning(f"PDF extraction failed for '{filename}': {exc}")
             raise HTTPException(

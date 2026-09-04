@@ -1,0 +1,137 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- D:\New Project\SIH\CYBERNEX\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\New Project\SIH\CYBERNEX\backend
+plugins: anyio-4.15.0, langsmith-0.12.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items
+
+tests/test_ocr.py::test_ocr_service_recognizes_synthetic_image PASSED    [  5%]
+tests/test_ocr.py::test_ocr_service_exposes_alias_and_bytes_entrypoint PASSED [ 10%]
+tests/test_ocr.py::test_extract_scanned_single_page_pdf PASSED           [ 15%]
+tests/test_ocr.py::test_extract_scanned_multipage_pdf PASSED             [ 21%]
+tests/test_ocr.py::test_extract_mixed_pdf_selects_method_per_page PASSED [ 26%]
+tests/test_ocr.py::test_extract_blank_ocr_page_handled_safely PASSED     [ 31%]
+tests/test_ocr.py::test_text_pdf_does_not_trigger_ocr PASSED             [ 36%]
+tests/test_ocr.py::test_extract_whitespace_only_page_triggers_ocr PASSED [ 42%]
+tests/test_ocr.py::test_extract_invalid_pdf_raises PASSED                [ 47%]
+tests/test_ocr.py::test_extract_empty_file_raises PASSED                 [ 52%]
+tests/test_ocr.py::test_extract_missing_file_raises PASSED               [ 57%]
+tests/test_ocr.py::test_ocr_unavailable_raises_on_scanned_pdf PASSED     [ 63%]
+tests/test_ocr.py::test_ocr_failure_raises PASSED                        [ 68%]
+tests/test_ocr.py::test_api_pdf_extract_normal_pdf FAILED                [ 73%]
+tests/test_ocr.py::test_api_pdf_extract_scanned_pdf FAILED               [ 78%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_non_pdf FAILED           [ 84%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf FAILED     [ 89%]
+tests/test_ocr.py::test_api_pdf_extract_requires_file PASSED             [ 94%]
+tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up FAILED      [100%]
+
+================================== FAILURES ===================================
+_______________________ test_api_pdf_extract_normal_pdf _______________________
+tests\test_ocr.py:296: in test_api_pdf_extract_normal_pdf
+    res = _upload_pdf(client, "api_normal.pdf", data)
+          ^^^^^^^^^^^
+E   NameError: name '_upload_pdf' is not defined
+---------------------------- Captured stdout setup ----------------------------
+[2026-09-04 21:35:09] [INFO] [cybernex] - Initializing CYBERNEX Sovereign Backend...
+[2026-09-04 21:35:09] [INFO] [cybernex] - Database and storage directories ready.
+----------------------------- Captured log setup ------------------------------
+INFO     cybernex:main.py:16 Initializing CYBERNEX Sovereign Backend...
+INFO     cybernex:main.py:19 Database and storage directories ready.
+-------------------------- Captured stdout teardown ---------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Shutting down CYBERNEX Backend.
+---------------------------- Captured log teardown ----------------------------
+INFO     cybernex:main.py:21 Shutting down CYBERNEX Backend.
+______________________ test_api_pdf_extract_scanned_pdf _______________________
+tests\test_ocr.py:309: in test_api_pdf_extract_scanned_pdf
+    res = _upload_pdf(client, "api_scanned.pdf", data)
+          ^^^^^^^^^^^
+E   NameError: name '_upload_pdf' is not defined
+---------------------------- Captured stdout setup ----------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Initializing CYBERNEX Sovereign Backend...
+[2026-09-04 21:35:11] [INFO] [cybernex] - Database and storage directories ready.
+----------------------------- Captured log setup ------------------------------
+INFO     cybernex:main.py:16 Initializing CYBERNEX Sovereign Backend...
+INFO     cybernex:main.py:19 Database and storage directories ready.
+-------------------------- Captured stdout teardown ---------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Shutting down CYBERNEX Backend.
+---------------------------- Captured log teardown ----------------------------
+INFO     cybernex:main.py:21 Shutting down CYBERNEX Backend.
+____________________ test_api_pdf_extract_rejects_non_pdf _____________________
+tests\test_ocr.py:322: in test_api_pdf_extract_rejects_non_pdf
+    res = _upload_pdf(client, "notes.txt", b"plain text, not a pdf")
+          ^^^^^^^^^^^
+E   NameError: name '_upload_pdf' is not defined
+---------------------------- Captured stdout setup ----------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Initializing CYBERNEX Sovereign Backend...
+[2026-09-04 21:35:11] [INFO] [cybernex] - Database and storage directories ready.
+----------------------------- Captured log setup ------------------------------
+INFO     cybernex:main.py:16 Initializing CYBERNEX Sovereign Backend...
+INFO     cybernex:main.py:19 Database and storage directories ready.
+-------------------------- Captured stdout teardown ---------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Shutting down CYBERNEX Backend.
+---------------------------- Captured log teardown ----------------------------
+INFO     cybernex:main.py:21 Shutting down CYBERNEX Backend.
+_________________ test_api_pdf_extract_rejects_corrupted_pdf __________________
+tests\test_ocr.py:328: in test_api_pdf_extract_rejects_corrupted_pdf
+    res = _upload_pdf(client, "broken.pdf", b"definitely not a real pdf body")
+          ^^^^^^^^^^^
+E   NameError: name '_upload_pdf' is not defined
+---------------------------- Captured stdout setup ----------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Initializing CYBERNEX Sovereign Backend...
+[2026-09-04 21:35:11] [INFO] [cybernex] - Database and storage directories ready.
+----------------------------- Captured log setup ------------------------------
+INFO     cybernex:main.py:16 Initializing CYBERNEX Sovereign Backend...
+INFO     cybernex:main.py:19 Database and storage directories ready.
+-------------------------- Captured stdout teardown ---------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Shutting down CYBERNEX Backend.
+---------------------------- Captured log teardown ----------------------------
+INFO     cybernex:main.py:21 Shutting down CYBERNEX Backend.
+__________________ test_api_temp_upload_files_are_cleaned_up __________________
+tests\test_ocr.py:349: in test_api_temp_upload_files_are_cleaned_up
+    assert _upload_pdf(client, "cleanup.pdf", data).status_code == 200
+           ^^^^^^^^^^^
+E   NameError: name '_upload_pdf' is not defined
+---------------------------- Captured stdout setup ----------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Initializing CYBERNEX Sovereign Backend...
+[2026-09-04 21:35:11] [INFO] [cybernex] - Database and storage directories ready.
+----------------------------- Captured log setup ------------------------------
+INFO     cybernex:main.py:16 Initializing CYBERNEX Sovereign Backend...
+INFO     cybernex:main.py:19 Database and storage directories ready.
+-------------------------- Captured stdout teardown ---------------------------
+[2026-09-04 21:35:11] [INFO] [cybernex] - Shutting down CYBERNEX Backend.
+---------------------------- Captured log teardown ----------------------------
+INFO     cybernex:main.py:21 Shutting down CYBERNEX Backend.
+============================== warnings summary ===============================
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+app\schemas\model.py:5
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\model.py:5: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class AIModelSchema(BaseModel):
+
+.venv\Lib\site-packages\qdrant_client\qdrant_remote.py:290
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\qdrant_client\qdrant_remote.py:290: UserWarning: Failed to obtain server version. Unable to check client-server compatibility. Set check_compatibility=False to skip version check.
+    show_warning(
+
+app\schemas\knowledge.py:10
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:10: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class KnowledgeCollectionSchema(BaseModel):
+
+app\schemas\knowledge.py:36
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DocumentSchema(BaseModel):
+
+tests/test_ocr.py::test_ocr_service_recognizes_synthetic_image
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\paddle\utils\cpp_extension\extension_utils.py:712: UserWarning: No ccache found. Please be aware that recompiling all source files may be required. You can download and install ccache from: https://github.com/ccache/ccache/blob/master/doc/INSTALL.md
+    warnings.warn(warning_message)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_ocr.py::test_api_pdf_extract_normal_pdf - NameError: name '...
+FAILED tests/test_ocr.py::test_api_pdf_extract_scanned_pdf - NameError: name ...
+FAILED tests/test_ocr.py::test_api_pdf_extract_rejects_non_pdf - NameError: n...
+FAILED tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf - NameEr...
+FAILED tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up - NameErr...
+============ 5 failed, 14 passed, 6 warnings in 255.74s (0:04:15) =============

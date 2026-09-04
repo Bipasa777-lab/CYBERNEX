@@ -1,0 +1,47 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- D:\New Project\SIH\CYBERNEX\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\New Project\SIH\CYBERNEX\backend
+plugins: anyio-4.15.0, langsmith-0.12.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 19 items / 13 deselected / 6 selected
+
+tests/test_ocr.py::test_api_pdf_extract_normal_pdf PASSED                [ 16%]
+tests/test_ocr.py::test_api_pdf_extract_scanned_pdf PASSED               [ 33%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_non_pdf PASSED           [ 50%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf PASSED     [ 66%]
+tests/test_ocr.py::test_api_pdf_extract_requires_file PASSED             [ 83%]
+tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up PASSED      [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+app\schemas\model.py:5
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\model.py:5: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class AIModelSchema(BaseModel):
+
+app\schemas\knowledge.py:10
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:10: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class KnowledgeCollectionSchema(BaseModel):
+
+app\schemas\knowledge.py:36
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DocumentSchema(BaseModel):
+
+tests/test_ocr.py::test_api_pdf_extract_normal_pdf
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\qdrant_client\qdrant_remote.py:290: UserWarning: Failed to obtain server version. Unable to check client-server compatibility. Set check_compatibility=False to skip version check.
+    show_warning(
+
+tests/test_ocr.py::test_api_pdf_extract_scanned_pdf
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\paddle\utils\cpp_extension\extension_utils.py:712: UserWarning: No ccache found. Please be aware that recompiling all source files may be required. You can download and install ccache from: https://github.com/ccache/ccache/blob/master/doc/INSTALL.md
+    warnings.warn(warning_message)
+
+tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf
+tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\fastapi\routing.py:352: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return await dependant.call(**values)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================ 6 passed, 13 deselected, 8 warnings in 47.15s ================

@@ -1,0 +1,33 @@
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+Connecting to http://127.0.0.1:8765/api/v1/pdf/extract ...
+
+### NORMAL PDF (2 digital text pages) -> HTTP 200
+    filename: manual_normal.pdf  page_count: 2
+    page 1 has_text=True chars=41 source?=n/a :: Digital boiler inspection report page one
+    page 2 has_text=True chars=41 source?=n/a :: Digital boiler inspection report page two
+
+### SCANNED PDF (1 image-only page) -> HTTP 200
+    filename: manual_scanned.pdf  page_count: 1
+    page 1 has_text=True chars=102 source?=n/a :: CYBERNEX OCR TEST | Pump inspection status: NORMAL | Bearing temperature: 42 C | Calib
+
+### SCANNED MULTI-PAGE PDF (2 image-only pages) -> HTTP 200
+    filename: manual_scanned_multi.pdf  page_count: 2
+    page 1 has_text=True chars=48 source?=n/a :: CYBERNEX OCR TEST | Pump inspection status: NORMAL
+    page 2 has_text=True chars=53 source?=n/a :: Bearing temperature: 42 C | Calibration due: 2026-12-01
+
+### MIXED PDF (text + scanned + text) -> HTTP 200
+    filename: manual_mixed.pdf  page_count: 3
+    page 1 has_text=True chars=21 source?=n/a :: Digital text page one
+    page 2 has_text=True chars=19 source?=n/a :: Scanned middle page
+    page 3 has_text=True chars=23 source?=n/a :: Digital text page three
+
+### INVALID PDF (garbage bytes) -> HTTP 422
+    detail: Invalid or corrupted PDF file.
+
+### NON-PDF UPLOAD (notes.txt) -> HTTP 400
+    detail: Unsupported file type. Only PDF files are accepted.
+
+### MISSING FILE (no multipart field) -> HTTP 422
+    detail: Invalid or corrupted PDF file.
+
+Manual verification complete.

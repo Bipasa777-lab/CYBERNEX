@@ -9,6 +9,7 @@ from app.api.v1.knowledge import router as knowledge_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.runs import router as runs_router
 from app.api.v1.ocr import router as ocr_router
+from app.api.v1.pdf import router as pdf_router
 from app.api.v1.sandbox import router as sandbox_router
 from app.api.v1.security import router as security_router
 from app.api.v1.system import router as system_router
@@ -25,6 +26,7 @@ api_router.include_router(knowledge_router)
 api_router.include_router(documents_router)
 api_router.include_router(runs_router)
 api_router.include_router(ocr_router)
+api_router.include_router(pdf_router)
 api_router.include_router(sandbox_router)
 api_router.include_router(security_router)
 api_router.include_router(system_router)

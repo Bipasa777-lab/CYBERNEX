@@ -1,0 +1,5 @@
+dpi=150 rendered size=1240x1755
+  medium predict: 0.0s texts=None
+dpi=200 rendered size=1653x2339
+  medium predict: 0.0s texts=None
+mobile models failed: ValueError: No engine bindings registered for model 'PP-OCRv6_mobile_det'.

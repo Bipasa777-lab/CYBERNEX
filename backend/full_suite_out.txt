@@ -1,0 +1,85 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- D:\New Project\SIH\CYBERNEX\backend\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\New Project\SIH\CYBERNEX\backend
+plugins: anyio-4.15.0, langsmith-0.12.1, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 43 items
+
+tests/test_backend.py::test_root_health PASSED                           [  2%]
+tests/test_backend.py::test_api_v1_health PASSED                         [  4%]
+tests/test_backend.py::test_auth_register_and_login PASSED               [  6%]
+tests/test_backend.py::test_models_list PASSED                           [  9%]
+tests/test_backend.py::test_file_upload_and_metadata PASSED              [ 11%]
+tests/test_backend.py::test_task_and_run_creation PASSED                 [ 13%]
+tests/test_backend.py::test_security_and_system_status PASSED            [ 16%]
+tests/test_backend.py::test_ollama_unavailable_state PASSED              [ 18%]
+tests/test_backend.py::test_sandbox_docker_status PASSED                 [ 20%]
+tests/test_ocr.py::test_ocr_service_recognizes_synthetic_image PASSED    [ 23%]
+tests/test_ocr.py::test_ocr_service_exposes_alias_and_bytes_entrypoint PASSED [ 25%]
+tests/test_ocr.py::test_extract_scanned_single_page_pdf PASSED           [ 27%]
+tests/test_ocr.py::test_extract_scanned_multipage_pdf PASSED             [ 30%]
+tests/test_ocr.py::test_extract_mixed_pdf_selects_method_per_page PASSED [ 32%]
+tests/test_ocr.py::test_extract_blank_ocr_page_handled_safely PASSED     [ 34%]
+tests/test_ocr.py::test_text_pdf_does_not_trigger_ocr PASSED             [ 37%]
+tests/test_ocr.py::test_extract_whitespace_only_page_triggers_ocr PASSED [ 39%]
+tests/test_ocr.py::test_extract_invalid_pdf_raises PASSED                [ 41%]
+tests/test_ocr.py::test_extract_empty_file_raises PASSED                 [ 44%]
+tests/test_ocr.py::test_extract_missing_file_raises PASSED               [ 46%]
+tests/test_ocr.py::test_ocr_unavailable_raises_on_scanned_pdf PASSED     [ 48%]
+tests/test_ocr.py::test_ocr_failure_raises PASSED                        [ 51%]
+tests/test_ocr.py::test_api_pdf_extract_normal_pdf PASSED                [ 53%]
+tests/test_ocr.py::test_api_pdf_extract_scanned_pdf PASSED               [ 55%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_non_pdf PASSED           [ 58%]
+tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf PASSED     [ 60%]
+tests/test_ocr.py::test_api_pdf_extract_requires_file PASSED             [ 62%]
+tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up PASSED      [ 65%]
+tests/test_pdf_tool.py::test_extract_single_page_text_pdf PASSED         [ 67%]
+tests/test_pdf_tool.py::test_extract_multipage_pdf_page_numbering PASSED [ 69%]
+tests/test_pdf_tool.py::test_extract_empty_and_image_only_pages_no_ocr PASSED [ 72%]
+tests/test_pdf_tool.py::test_clean_page_text_normalizes_noise PASSED     [ 74%]
+tests/test_pdf_tool.py::test_clean_page_text_empty_input PASSED          [ 76%]
+tests/test_pdf_tool.py::test_extract_invalid_pdf_raises PASSED           [ 79%]
+tests/test_pdf_tool.py::test_extract_empty_file_raises PASSED            [ 81%]
+tests/test_pdf_tool.py::test_extract_missing_file_raises PASSED          [ 83%]
+tests/test_pdf_tool.py::test_api_pdf_extract_valid_pdf PASSED            [ 86%]
+tests/test_pdf_tool.py::test_api_pdf_extract_multipage_numbering PASSED  [ 88%]
+tests/test_pdf_tool.py::test_api_pdf_extract_response_structure PASSED   [ 90%]
+tests/test_pdf_tool.py::test_api_pdf_extract_page_without_text PASSED    [ 93%]
+tests/test_pdf_tool.py::test_api_pdf_extract_rejects_non_pdf PASSED      [ 95%]
+tests/test_pdf_tool.py::test_api_pdf_extract_rejects_corrupted_pdf PASSED [ 97%]
+tests/test_pdf_tool.py::test_api_pdf_extract_requires_file PASSED        [100%]
+
+============================== warnings summary ===============================
+.venv\Lib\site-packages\starlette\testclient.py:53
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+app\schemas\model.py:5
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\model.py:5: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class AIModelSchema(BaseModel):
+
+.venv\Lib\site-packages\qdrant_client\qdrant_remote.py:290
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\qdrant_client\qdrant_remote.py:290: UserWarning: Failed to obtain server version. Unable to check client-server compatibility. Set check_compatibility=False to skip version check.
+    show_warning(
+
+app\schemas\knowledge.py:10
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:10: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class KnowledgeCollectionSchema(BaseModel):
+
+app\schemas\knowledge.py:36
+  D:\New Project\SIH\CYBERNEX\backend\app\schemas\knowledge.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DocumentSchema(BaseModel):
+
+tests/test_ocr.py::test_ocr_service_recognizes_synthetic_image
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\paddle\utils\cpp_extension\extension_utils.py:712: UserWarning: No ccache found. Please be aware that recompiling all source files may be required. You can download and install ccache from: https://github.com/ccache/ccache/blob/master/doc/INSTALL.md
+    warnings.warn(warning_message)
+
+tests/test_ocr.py::test_api_pdf_extract_rejects_corrupted_pdf
+tests/test_ocr.py::test_api_temp_upload_files_are_cleaned_up
+tests/test_pdf_tool.py::test_api_pdf_extract_rejects_corrupted_pdf
+  D:\New Project\SIH\CYBERNEX\backend\.venv\Lib\site-packages\fastapi\routing.py:352: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return await dependant.call(**values)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================= 43 passed, 9 warnings in 421.11s (0:07:01) ==================

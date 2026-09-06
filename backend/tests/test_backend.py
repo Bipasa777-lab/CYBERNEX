@@ -1,5 +1,8 @@
 import io
+import os
+import zipfile
 import pytest
+from app.services.documents.generator import doc_generator, sanitize_xml_text
 from app.services.models.ollama_client import OllamaProvider
 
 ollama_provider = OllamaProvider()
@@ -117,3 +120,98 @@ def test_sandbox_docker_status(client):
     assert res.status_code == 200
     data = res.json()
     assert data["status"] in ["SUCCESS", "SANDBOX_UNAVAILABLE"]
+
+
+def test_sanitize_xml_text():
+    dirty_text = "Sl. No. 2526\x00\x08\x0bPage 1\x0cReport \x1fOK \ud800Text"
+    clean_text = sanitize_xml_text(dirty_text)
+    # Control chars removed, form feed and vertical tab converted to \n
+    assert "\x00" not in clean_text
+    assert "\x08" not in clean_text
+    assert "\x1f" not in clean_text
+    assert "\ud800" not in clean_text
+    assert "Sl. No. 2526" in clean_text
+    assert "Page 1" in clean_text
+    assert "\n" in clean_text
+
+
+def test_docx_generation_regression():
+    """
+    Regression test: ensures DocumentGenerator.generate_docx produces a genuine
+    OpenXML ZIP package (not a renamed plain text file) and that word/document.xml exists.
+    """
+    sections = [
+        {"title": "1. Executive Summary\x0c", "content": "Summary text with OCR noise\x00\x08 and valid content."},
+        {"title": "2. OCR Extracted Evidence", "content": "Sl. No. 252601611969\n\x0c--- Page 2 ---\nGRADE CARD\x00\x1fPASS"}
+    ]
+    out = doc_generator.generate_docx(
+        title="Test Executive Report\x0c",
+        sections=sections,
+        output_name="Regression_Test_Report.docx"
+    )
+
+    file_path = out["file_path"]
+    assert os.path.exists(file_path)
+    assert out["name"] == "Regression_Test_Report.docx"
+    assert out["type"] == "DOCX"
+
+    # Must be larger than a plain text stub (typically > 10KB)
+    assert os.path.getsize(file_path) > 5000
+
+    # Must be a valid ZIP archive
+    assert zipfile.is_zipfile(file_path)
+
+    # Must contain OpenXML structural XML files
+    with zipfile.ZipFile(file_path, "r") as zf:
+        namelist = zf.namelist()
+        assert "word/document.xml" in namelist
+        assert "[Content_Types].xml" in namelist
+
+        doc_xml = zf.read("word/document.xml").decode("utf-8")
+        assert "Sl. No. 252601611969" in doc_xml
+        assert "GRADE CARD" in doc_xml
+
+
+def test_docx_download_api_regression(client):
+    """
+    API test: downloads generated DOCX and verifies content-type header
+    and binary ZIP/DOCX package structure.
+    """
+    task_payload = {
+        "prompt": "Extract all text from scanned document for DOCX test.",
+        "model": "Auto",
+        "tools": ["Knowledge"],
+        "file_ids": []
+    }
+    task_res = client.post("/api/v1/tasks", json=task_payload)
+    assert task_res.status_code == 200
+    run_id = task_res.json()["run_id"]
+
+    # Fetch run details to obtain generated deliverable
+    run_res = client.get(f"/api/v1/runs/{run_id}")
+    assert run_res.status_code == 200
+    run_data = run_res.json()
+    assert len(run_data["deliverables"]) > 0
+
+    deliv = run_data["deliverables"][0]
+    download_url = deliv.get("downloadUrl") or deliv.get("download_url") or f"/api/v1/documents/{deliv['id']}/download"
+    assert download_url.startswith("/api/v1/documents/")
+
+    # Download deliverable via API
+    dl_res = client.get(download_url)
+    assert dl_res.status_code == 200
+
+    expected_media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    content_type = dl_res.headers.get("content-type", "")
+    assert expected_media_type in content_type
+
+    # Verify binary DOCX payload is a valid ZIP package with word/document.xml
+    body_bytes = dl_res.content
+    assert len(body_bytes) > 5000
+    assert zipfile.is_zipfile(io.BytesIO(body_bytes))
+
+    with zipfile.ZipFile(io.BytesIO(body_bytes), "r") as zf:
+        namelist = zf.namelist()
+        assert "word/document.xml" in namelist
+        assert "[Content_Types].xml" in namelist
+

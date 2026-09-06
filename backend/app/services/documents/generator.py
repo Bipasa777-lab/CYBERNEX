@@ -1,3 +1,4 @@
+import re
 import os
 import uuid
 from typing import Dict, Any, List, Optional
@@ -26,6 +27,29 @@ except ImportError:
 
 settings = get_settings()
 
+# Match characters disallowed in XML 1.0 documents:
+# Valid chars: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+_ILLEGAL_XML_CHARS_RE = re.compile(
+    r"[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\U00010000-\U0010FFFF]"
+)
+
+
+def sanitize_xml_text(text: Any) -> str:
+    """
+    Sanitizes string for XML 1.0 / OpenXML compliance.
+    Replaces form feeds (\\x0c) and vertical tabs (\\x0b) with newlines,
+    and removes NULL bytes (\\x00) and any other control characters
+    disallowed in XML 1.0 documents.
+    """
+    if text is None:
+        return ""
+    if not isinstance(text, str):
+        text = str(text)
+    # Convert form feed and vertical tab to newline so text layout is preserved
+    text = text.replace("\x0c", "\n").replace("\x0b", "\n")
+    # Strip any characters illegal in XML 1.0
+    return _ILLEGAL_XML_CHARS_RE.sub("", text)
+
 
 class DocumentGenerator:
     def generate_docx(
@@ -36,7 +60,14 @@ class DocumentGenerator:
     ) -> Dict[str, Any]:
         """
         Generates a sovereign DOCX deliverable in storage/outputs/.
+        Enforces a genuine OpenXML ZIP package created via python-docx.
+        Never saves plain text under a .docx extension.
         """
+        if not DOCX_AVAILABLE:
+            raise RuntimeError(
+                "python-docx is not installed. Cannot generate valid DOCX package."
+            )
+
         settings.init_storage_dirs()
         doc_id = f"docgen-{uuid.uuid4().hex[:8]}"
         filename = output_name or f"Deliverable_{doc_id}.docx"
@@ -45,39 +76,51 @@ class DocumentGenerator:
 
         file_path = os.path.abspath(os.path.join(settings.OUTPUT_DIR, filename))
 
-        if DOCX_AVAILABLE:
-            try:
-                doc = docx.Document()
+        clean_title = sanitize_xml_text(title)
 
-                # Header Title
-                title_p = doc.add_heading(level=0)
-                run = title_p.add_run(title)
-                run.font.color.rgb = RGBColor(12, 74, 110)  # Cybernex Sky Blue #0C4A6E
-                run.font.size = Pt(22)
-                run.bold = True
+        try:
+            doc = docx.Document()
 
-                doc.add_paragraph("CYBERNEX Sovereign AI Workbench Deliverable")
-                doc.add_paragraph("=" * 60)
+            # Header Title
+            title_p = doc.add_heading(level=0)
+            run = title_p.add_run(clean_title)
+            run.font.color.rgb = RGBColor(12, 74, 110)  # Cybernex Sky Blue #0C4A6E
+            run.font.size = Pt(22)
+            run.bold = True
 
-                for sec in sections:
-                    sec_title = sec.get("title", "Section")
-                    sec_content = sec.get("content", "")
+            doc.add_paragraph("CYBERNEX Sovereign AI Workbench Deliverable")
+            doc.add_paragraph("=" * 60)
 
-                    h = doc.add_heading(sec_title, level=1)
-                    if h.runs:
-                        h.runs[0].font.color.rgb = RGBColor(3, 105, 161)
+            for sec in sections:
+                sec_title = sanitize_xml_text(sec.get("title", "Section"))
+                sec_content = sanitize_xml_text(sec.get("content", ""))
 
-                    p = doc.add_paragraph(sec_content)
+                h = doc.add_heading(sec_title, level=1)
+                if h.runs:
+                    h.runs[0].font.color.rgb = RGBColor(3, 105, 161)
+
+                if sec_content:
+                    paragraphs = sec_content.split("\n\n")
+                    for p_text in paragraphs:
+                        clean_p = p_text.strip()
+                        if clean_p:
+                            p = doc.add_paragraph(clean_p)
+                            p.style.font.size = Pt(11)
+                else:
+                    p = doc.add_paragraph("")
                     p.style.font.size = Pt(11)
 
-                doc.save(file_path)
-                logger.info(f"Generated DOCX deliverable: {file_path}")
+            doc.save(file_path)
+            logger.info(f"Generated valid DOCX deliverable: {file_path}")
 
-            except Exception as e:
-                logger.error(f"Failed to generate DOCX file: {e}")
-                self._fallback_text(file_path, title, sections)
-        else:
-            self._fallback_text(file_path, title, sections)
+        except Exception as e:
+            logger.error(f"Failed to generate valid DOCX file: {e}")
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+            raise RuntimeError(f"Failed to generate valid DOCX package: {e}") from e
 
         size_bytes = os.path.getsize(file_path) if os.path.exists(file_path) else 1024
         size_str = f"{round(size_bytes / 1024, 1)} KB"
@@ -88,7 +131,7 @@ class DocumentGenerator:
             "type": "DOCX",
             "size": size_str,
             "status": "Verified",
-            "summary": f"Generated formal document '{title}'.",
+            "summary": f"Generated formal document '{clean_title}'.",
             "file_path": file_path,
             "download_url": f"/api/v1/documents/{doc_id}/download"
         }
@@ -107,20 +150,26 @@ class DocumentGenerator:
 
         file_path = os.path.abspath(os.path.join(settings.OUTPUT_DIR, filename))
 
-        if OPENPYXL_AVAILABLE:
-            try:
-                wb = openpyxl.Workbook()
-                ws = wb.active
-                ws.title = title[:30]
-                for r_idx, row in enumerate(rows, 1):
-                    for c_idx, val in enumerate(row, 1):
-                        ws.cell(row=r_idx, column=c_idx, value=val)
-                wb.save(file_path)
-            except Exception as e:
-                logger.error(f"Failed to generate XLSX file: {e}")
-                self._fallback_text(file_path, title, [{"title": "Data", "content": str(rows)}])
-        else:
-            self._fallback_text(file_path, title, [{"title": "Data", "content": str(rows)}])
+        if not OPENPYXL_AVAILABLE:
+            raise RuntimeError("openpyxl is not installed. Cannot generate valid XLSX deliverable.")
+
+        try:
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = sanitize_xml_text(title)[:30]
+            for r_idx, row in enumerate(rows, 1):
+                for c_idx, val in enumerate(row, 1):
+                    clean_val = sanitize_xml_text(val) if isinstance(val, str) else val
+                    ws.cell(row=r_idx, column=c_idx, value=clean_val)
+            wb.save(file_path)
+        except Exception as e:
+            logger.error(f"Failed to generate valid XLSX file: {e}")
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+            raise RuntimeError(f"Failed to generate valid XLSX package: {e}") from e
 
         size_bytes = os.path.getsize(file_path) if os.path.exists(file_path) else 1024
         return {

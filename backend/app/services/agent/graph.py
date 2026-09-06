@@ -200,7 +200,7 @@ def generate_output_node(state: AgentState) -> AgentState:
 
     sections = [
         {"title": "1. Executive Summary", "content": f"Task Prompt: {prompt}\n\nProcessed task context locally with zero cloud dependencies."},
-        {"title": "2. Extracted Evidence & Context", "content": ocr_text[:1000] if ocr_text else "No uploaded attachment text."},
+        {"title": "2. Extracted Evidence & Context", "content": ocr_text if ocr_text else "No uploaded attachment text."},
         {"title": "3. Vector Knowledge References", "content": "\n\n".join([c.get("text", "") for c in chunks]) if chunks else "No vector chunks retrieved."}
     ]
 

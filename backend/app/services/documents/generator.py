@@ -7,23 +7,27 @@ from app.core.logging import logger
 
 try:
     import docx
-    from docx.shared import Inches, Pt, RGBColor
+    from docx.shared import Pt, RGBColor
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
+    docx = None  # type: ignore
+    Pt = None  # type: ignore
+    RGBColor = None  # type: ignore
 
 try:
     import openpyxl
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
+    openpyxl = None  # type: ignore
 
 try:
     import pptx
-    from pptx.util import Inches as PPTXInches, Pt as PPTXPt
     PPTX_AVAILABLE = True
 except ImportError:
     PPTX_AVAILABLE = False
+    pptx = None  # type: ignore
 
 settings = get_settings()
 
@@ -63,20 +67,21 @@ class DocumentGenerator:
         Enforces a genuine OpenXML ZIP package created via python-docx.
         Never saves plain text under a .docx extension.
         """
-        if not DOCX_AVAILABLE:
+        if not DOCX_AVAILABLE or docx is None or Pt is None or RGBColor is None:
             raise RuntimeError(
                 "python-docx is not installed. Cannot generate valid DOCX package."
             )
 
         settings.init_storage_dirs()
         doc_id = f"docgen-{uuid.uuid4().hex[:8]}"
-        filename = output_name or f"Deliverable_{doc_id}.docx"
-        if not filename.endswith(".docx"):
-            filename += ".docx"
+
+        raw_filename = os.path.basename(output_name) if output_name else f"Deliverable_{doc_id}.docx"
+        filename = raw_filename if raw_filename.endswith(".docx") else f"{raw_filename}.docx"
 
         file_path = os.path.abspath(os.path.join(settings.OUTPUT_DIR, filename))
 
         clean_title = sanitize_xml_text(title)
+        safe_sections = sections or []
 
         try:
             doc = docx.Document()
@@ -91,7 +96,9 @@ class DocumentGenerator:
             doc.add_paragraph("CYBERNEX Sovereign AI Workbench Deliverable")
             doc.add_paragraph("=" * 60)
 
-            for sec in sections:
+            for sec in safe_sections:
+                if not isinstance(sec, dict):
+                    sec = {"title": "Section", "content": str(sec)}
                 sec_title = sanitize_xml_text(sec.get("title", "Section"))
                 sec_content = sanitize_xml_text(sec.get("content", ""))
 
@@ -105,10 +112,12 @@ class DocumentGenerator:
                         clean_p = p_text.strip()
                         if clean_p:
                             p = doc.add_paragraph(clean_p)
-                            p.style.font.size = Pt(11)
+                            if p.style and getattr(p.style, "font", None) is not None:
+                                p.style.font.size = Pt(11)
                 else:
                     p = doc.add_paragraph("")
-                    p.style.font.size = Pt(11)
+                    if p.style and getattr(p.style, "font", None) is not None:
+                        p.style.font.size = Pt(11)
 
             doc.save(file_path)
             logger.info(f"Generated valid DOCX deliverable: {file_path}")
@@ -144,20 +153,29 @@ class DocumentGenerator:
     ) -> Dict[str, Any]:
         settings.init_storage_dirs()
         doc_id = f"docgen-{uuid.uuid4().hex[:8]}"
-        filename = output_name or f"Analysis_{doc_id}.xlsx"
-        if not filename.endswith(".xlsx"):
-            filename += ".xlsx"
+
+        raw_filename = os.path.basename(output_name) if output_name else f"Analysis_{doc_id}.xlsx"
+        filename = raw_filename if raw_filename.endswith(".xlsx") else f"{raw_filename}.xlsx"
 
         file_path = os.path.abspath(os.path.join(settings.OUTPUT_DIR, filename))
 
-        if not OPENPYXL_AVAILABLE:
+        if not OPENPYXL_AVAILABLE or openpyxl is None:
             raise RuntimeError("openpyxl is not installed. Cannot generate valid XLSX deliverable.")
 
         try:
             wb = openpyxl.Workbook()
             ws = wb.active
-            ws.title = sanitize_xml_text(title)[:30]
-            for r_idx, row in enumerate(rows, 1):
+            if ws is None:
+                ws = wb.create_sheet("Sheet1")
+            clean_title = sanitize_xml_text(title)
+            # Remove characters invalid in Excel sheet names: \ / ? * [ ] :
+            ws_title = re.sub(r"[\[\]\*\?/\\]", "_", clean_title).strip()[:31]
+            ws.title = ws_title if ws_title else "Sheet1"
+
+            safe_rows = rows or []
+            for r_idx, row in enumerate(safe_rows, 1):
+                if not isinstance(row, (list, tuple)):
+                    row = [row]
                 for c_idx, val in enumerate(row, 1):
                     clean_val = sanitize_xml_text(val) if isinstance(val, str) else val
                     ws.cell(row=r_idx, column=c_idx, value=clean_val)
@@ -183,13 +201,108 @@ class DocumentGenerator:
             "download_url": f"/api/v1/documents/{doc_id}/download"
         }
 
+    def generate_pptx(
+        self,
+        title: str,
+        slides: List[Any],
+        output_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Generates a sovereign PPTX presentation deliverable in storage/outputs/.
+        Uses python-pptx to produce a valid OpenXML presentation.
+        """
+        if not PPTX_AVAILABLE or pptx is None:
+            raise RuntimeError("python-pptx is not installed. Cannot generate valid PPTX deliverable.")
+
+        settings.init_storage_dirs()
+        doc_id = f"docgen-{uuid.uuid4().hex[:8]}"
+
+        raw_filename = os.path.basename(output_name) if output_name else f"Presentation_{doc_id}.pptx"
+        filename = raw_filename if raw_filename.endswith(".pptx") else f"{raw_filename}.pptx"
+
+        file_path = os.path.abspath(os.path.join(settings.OUTPUT_DIR, filename))
+        clean_title = sanitize_xml_text(title)
+        safe_slides = slides or []
+
+        try:
+            prs = pptx.Presentation()
+            
+            # Title slide
+            title_slide_layout = prs.slide_layouts[0]
+            slide = prs.slides.add_slide(title_slide_layout)
+            if slide.shapes.title and getattr(slide.shapes.title, "has_text_frame", False):
+                title_tf = getattr(slide.shapes.title, "text_frame", None)
+                if title_tf is not None:
+                    title_tf.text = clean_title
+
+            if len(slide.placeholders) > 1:
+                sub_ph = slide.placeholders[1]
+                if getattr(sub_ph, "has_text_frame", False):
+                    sub_tf = getattr(sub_ph, "text_frame", None)
+                    if sub_tf is not None:
+                        sub_tf.text = "CYBERNEX Sovereign AI Workbench Deliverable"
+
+            # Content slides
+            bullet_slide_layout = prs.slide_layouts[1]
+            for s_data in safe_slides:
+                if not isinstance(s_data, dict):
+                    s_data = {"title": "Slide", "content": str(s_data)}
+                s_title = sanitize_xml_text(s_data.get("title", "Slide"))
+                s_content = sanitize_xml_text(s_data.get("content", ""))
+
+                slide = prs.slides.add_slide(bullet_slide_layout)
+                if slide.shapes.title and getattr(slide.shapes.title, "has_text_frame", False):
+                    slide_title_tf = getattr(slide.shapes.title, "text_frame", None)
+                    if slide_title_tf is not None:
+                        slide_title_tf.text = s_title
+                
+                if len(slide.placeholders) > 1:
+                    content_ph = slide.placeholders[1]
+                    if getattr(content_ph, "has_text_frame", False):
+                        tf = getattr(content_ph, "text_frame", None)
+                        if tf is not None:
+                            tf.word_wrap = True
+                            
+                            points = [p.strip() for p in s_content.split("\n") if p.strip()]
+                            if points:
+                                tf.text = points[0]
+                                for pt in points[1:]:
+                                    p = tf.add_paragraph()
+                                    p.text = pt
+
+            prs.save(file_path)
+            logger.info(f"Generated valid PPTX deliverable: {file_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to generate valid PPTX file: {e}")
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+            raise RuntimeError(f"Failed to generate valid PPTX package: {e}") from e
+
+        size_bytes = os.path.getsize(file_path) if os.path.exists(file_path) else 1024
+        return {
+            "id": doc_id,
+            "name": filename,
+            "type": "PPTX",
+            "size": f"{round(size_bytes / 1024, 1)} KB",
+            "status": "Verified",
+            "summary": f"Generated PowerPoint deliverable '{clean_title}'.",
+            "file_path": file_path,
+            "download_url": f"/api/v1/documents/{doc_id}/download"
+        }
+
     def _fallback_text(self, file_path: str, title: str, sections: List[Dict[str, str]]):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(f"CYBERNEX SOVEREIGN EXECUTIVE REPORT: {title}\n\n")
-            for sec in sections:
-                f.write(f"=== {sec.get('title', '')} ===\n")
-                f.write(f"{sec.get('content', '')}\n\n")
+            for sec in (sections or []):
+                if isinstance(sec, dict):
+                    f.write(f"=== {sec.get('title', '')} ===\n")
+                    f.write(f"{sec.get('content', '')}\n\n")
 
 
 doc_generator = DocumentGenerator()
+
 

@@ -20,7 +20,7 @@ class QdrantService:
         self._client = None
         if QDRANT_SDK_AVAILABLE:
             try:
-                self._client = QdrantClient(url=self.url, timeout=3.0)
+                self._client = QdrantClient(url=self.url, timeout=3.0, check_compatibility=False)
             except Exception as e:
                 logger.debug(f"Qdrant connection error: {e}")
 

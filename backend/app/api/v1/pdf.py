@@ -71,7 +71,7 @@ async def extract_pdf(file: UploadFile = File(...)):
         except PDFExtractionError as exc:
             logger.warning(f"PDF extraction failed for '{filename}': {exc}")
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=str(exc),
             )
     finally:

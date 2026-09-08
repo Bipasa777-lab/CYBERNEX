@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class KnowledgeCollectionCreate(BaseModel):
@@ -15,8 +15,7 @@ class KnowledgeCollectionSchema(BaseModel):
     vector_count: int = 0
     created_at: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class KnowledgeSearchRequest(BaseModel):
@@ -44,5 +43,4 @@ class DocumentSchema(BaseModel):
     updatedAt: str
     previewText: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

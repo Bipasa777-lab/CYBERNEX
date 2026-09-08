@@ -9,7 +9,13 @@ import io
 import fitz
 import pytest
 
+from app.services.ocr.service import PADDLEOCR_AVAILABLE
 from app.tools.pdf_tool import PDFExtractionError, clean_page_text, extract_pdf_text
+
+requires_ocr = pytest.mark.skipif(
+    not PADDLEOCR_AVAILABLE,
+    reason="PaddleOCR is not installed in this environment",
+)
 
 # ---------------------------------------------------------------------------
 # Synthetic PDF helpers
@@ -176,6 +182,7 @@ def test_api_pdf_extract_response_structure(client):
     }
 
 
+@requires_ocr
 def test_api_pdf_extract_page_without_text(client):
     data = _pdf_bytes(["Readable text", BLANK_PAGE, IMAGE_PAGE])
     res = _upload_pdf(client, "scanned_fixture.pdf", data)

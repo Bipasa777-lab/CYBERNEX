@@ -197,6 +197,7 @@ def generate_output_node(state: AgentState) -> AgentState:
     prompt = state.get("prompt", "Task Output")
     chunks = state.get("retrieved_chunks", [])
     ocr_text = state.get("ocr_text", "")
+    prompt_lower = prompt.lower()
 
     sections = [
         {"title": "1. Executive Summary", "content": f"Task Prompt: {prompt}\n\nProcessed task context locally with zero cloud dependencies."},
@@ -204,11 +205,34 @@ def generate_output_node(state: AgentState) -> AgentState:
         {"title": "3. Vector Knowledge References", "content": "\n\n".join([c.get("text", "") for c in chunks]) if chunks else "No vector chunks retrieved."}
     ]
 
-    out = doc_generator.generate_docx(
-        title=f"Analysis Report - {prompt[:30]}",
-        sections=sections,
-        output_name=f"Report_{uuid.uuid4().hex[:6]}.docx"
-    )
+    if any(k in prompt_lower for k in ["excel", "spreadsheet", "xlsx", "table"]):
+        rows = [
+            ["Section", "Content Summary"],
+            ["Executive Summary", f"Task: {prompt[:40]}"],
+            ["Extracted Text", ocr_text[:100] if ocr_text else "None"],
+            ["Knowledge Chunks", f"{len(chunks)} vector chunks retrieved"]
+        ]
+        out = doc_generator.generate_xlsx(
+            title=f"Analysis_{uuid.uuid4().hex[:6]}",
+            rows=rows,
+            output_name=f"Analysis_{uuid.uuid4().hex[:6]}.xlsx"
+        )
+    elif any(k in prompt_lower for k in ["presentation", "powerpoint", "pptx", "slide"]):
+        slides = [
+            {"title": sec["title"], "content": sec["content"]}
+            for sec in sections
+        ]
+        out = doc_generator.generate_pptx(
+            title=f"Presentation - {prompt[:30]}",
+            slides=slides,
+            output_name=f"Presentation_{uuid.uuid4().hex[:6]}.pptx"
+        )
+    else:
+        out = doc_generator.generate_docx(
+            title=f"Analysis Report - {prompt[:30]}",
+            sections=sections,
+            output_name=f"Report_{uuid.uuid4().hex[:6]}.docx"
+        )
 
     state["deliverable"] = out
     state["current_step"] = 8

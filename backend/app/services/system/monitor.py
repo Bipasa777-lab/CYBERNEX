@@ -23,13 +23,14 @@ class SystemMonitorService:
         """
         Returns real-time system hardware metrics (CPU, Memory, Disk, GPU).
         """
-        cpu_usage = psutil.cpu_percent(interval=None)
+        raw_cpu = psutil.cpu_percent(interval=None)
+        cpu_val = float(raw_cpu[0]) if isinstance(raw_cpu, list) else float(raw_cpu)
         memory_info = psutil.virtual_memory()
         disk_info = psutil.disk_usage("/")
         gpu_usage = self._get_gpu_usage()
 
         return SystemMetricsSchema(
-            cpuUsage=round(cpu_usage, 1),
+            cpuUsage=round(cpu_val, 1),
             memoryUsage=round(memory_info.percent, 1),
             storageUsage=round(disk_info.percent, 1),
             gpuUsage=gpu_usage,

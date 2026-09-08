@@ -219,9 +219,11 @@ def extract_pdf_text(file_path: str, *, use_ocr: bool = False, ocr_dpi: int = 20
             raise PDFExtractionError("PDF is password protected and cannot be read.")
 
         pages: List[Dict[str, Any]] = []
-        for index, page in enumerate(doc):
+        for index in range(len(doc)):
+            page = doc[index]
             page_number = index + 1  # expose 1-based page numbers
-            text = clean_page_text(page.get_text("text"))
+            raw_text = page.get_text("text")
+            text = clean_page_text(raw_text if isinstance(raw_text, str) else str(raw_text or ""))
             source = SOURCE_PYMUPDF
 
             # Meaningful native text is always preferred — only pages without

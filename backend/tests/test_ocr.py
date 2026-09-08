@@ -95,11 +95,6 @@ def _write_pdf(tmp_path, name, data):
     path.write_bytes(data)
     return str(path)
 
-def _write_pdf(tmp_path, name, data):
-    path = tmp_path / name
-    path.write_bytes(data)
-    return str(path)
-
 
 def _upload_pdf(client, name, data):
     return client.post(

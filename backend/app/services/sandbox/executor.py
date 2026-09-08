@@ -8,6 +8,7 @@ try:
     DOCKER_AVAILABLE = True
 except ImportError:
     DOCKER_AVAILABLE = False
+    docker = None  # type: ignore
 
 settings = get_settings()
 
@@ -21,7 +22,7 @@ class SandboxExecutor:
         start_time = time.time()
         timeout = min(timeout, settings.SANDBOX_TIMEOUT_SECONDS)
 
-        if not DOCKER_AVAILABLE:
+        if not DOCKER_AVAILABLE or docker is None:
             return {
                 "stdout": "",
                 "stderr": "SANDBOX_UNAVAILABLE: Docker SDK is not installed or available.",
@@ -63,16 +64,20 @@ class SandboxExecutor:
                 "duration": duration,
                 "status": "SUCCESS"
             }
-        except docker.errors.ContainerError as ce:
-            duration = f"{round(time.time() - start_time, 2)}s"
-            return {
-                "stdout": ce.stderr.decode("utf-8") if isinstance(ce.stderr, bytes) else str(ce.stderr),
-                "stderr": str(ce),
-                "exit_code": ce.exit_status,
-                "duration": duration,
-                "status": "ERROR"
-            }
         except Exception as e:
+            errors_mod = getattr(docker, "errors", None)
+            container_err = getattr(errors_mod, "ContainerError", None) if errors_mod else None
+            if container_err and isinstance(e, container_err):
+                duration = f"{round(time.time() - start_time, 2)}s"
+                ce_err = getattr(e, "stderr", "")
+                stderr_str = ce_err.decode("utf-8") if isinstance(ce_err, bytes) else str(ce_err)
+                return {
+                    "stdout": stderr_str,
+                    "stderr": str(e),
+                    "exit_code": getattr(e, "exit_status", -1),
+                    "duration": duration,
+                    "status": "ERROR"
+                }
             logger.error(f"Docker execution error: {e}")
             duration = f"{round(time.time() - start_time, 2)}s"
             return {
